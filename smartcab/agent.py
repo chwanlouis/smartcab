@@ -8,7 +8,7 @@ class LearningAgent(Agent):
     """ An agent that learns to drive in the Smartcab world.
         This is the object you will be modifying. """ 
 
-    def __init__(self, env, learning=False, epsilon=1.0, alpha=0.5):
+    def __init__(self, env, learning=True, epsilon=1.0, alpha=0.5):
         super(LearningAgent, self).__init__(env)     # Set the agent in the evironment 
         self.planner = RoutePlanner(self.env, self)  # Create a route planner
         self.valid_actions = self.env.valid_actions  # The set of valid actions
@@ -124,7 +124,7 @@ class LearningAgent(Agent):
         #   Otherwise, choose an action with the highest Q-value for the current state
 
         current_q = None
-        for k, v in self.Q[state]:
+        for k, v in self.Q[state].iteritems():
             if current_q is None or v > current_q:
                 action = k
                 current_q = v
@@ -142,8 +142,12 @@ class LearningAgent(Agent):
         # When learning, implement the value iteration update rule
         #   Use only the learning rate 'alpha' (do not use the discount factor 'gamma')
 
+        self.Q[state][action] += self.alpha * (reward + self.get_maxQ(state) - self.Q[state][action])
+
         return
 
+    def update_decay_function(self):
+        self.epsilon -= 0.05
 
     def update(self):
         """ The update function is called when a time step is completed in the 
@@ -155,6 +159,7 @@ class LearningAgent(Agent):
         action = self.choose_action(state)  # Choose an action
         reward = self.env.act(self, action) # Receive a reward
         self.learn(state, action, reward)   # Q-learn
+        self.update_decay_function()        # update decay function
 
         return
         
