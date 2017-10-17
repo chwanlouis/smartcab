@@ -18,6 +18,7 @@ class LearningAgent(Agent):
         self.Q = dict()          # Create a Q-table which will be a dictionary of tuples
         self.epsilon = epsilon   # Random exploration factor
         self.alpha = alpha       # Learning factor
+        self.steps = 0
 
         ###########
         ## TO DO ##
@@ -147,7 +148,7 @@ class LearningAgent(Agent):
         return
 
     def update_decay_function(self):
-        self.epsilon -= 0.05
+        self.epsilon = float(self.alpha) ** float(self.steps)
 
     def update(self):
         """ The update function is called when a time step is completed in the 
@@ -159,6 +160,7 @@ class LearningAgent(Agent):
         action = self.choose_action(state)  # Choose an action
         reward = self.env.act(self, action) # Receive a reward
         self.learn(state, action, reward)   # Q-learn
+        self.steps += 1
         self.update_decay_function()        # update decay function
 
         return
@@ -197,7 +199,7 @@ def run():
     #   display      - set to False to disable the GUI if PyGame is enabled
     #   log_metrics  - set to True to log trial and simulation results to /logs
     #   optimized    - set to True to change the default log file name
-    sim = Simulator(env, update_delay=0.01, log_metrics=True, display=False)
+    sim = Simulator(env, update_delay=0.01, log_metrics=True, display=False, optimized=True)
 
     ##############
     # Run the simulator
