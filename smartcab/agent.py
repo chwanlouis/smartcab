@@ -97,10 +97,11 @@ class LearningAgent(Agent):
         #   Then, for each action available, set the initial Q-value to 0.0
 
         if state not in self.Q.keys():
-            init_dict = dict()
-            for action in self.valid_actions:
-                init_dict[action] = 0
-            self.Q[state] = init_dict
+            if self.learning:
+                init_dict = dict()
+                for action in self.valid_actions:
+                    init_dict[action] = 0
+                self.Q[state] = init_dict
 
         return
 
@@ -123,12 +124,14 @@ class LearningAgent(Agent):
 
         # When learning, choose a random action with 'epsilon' probability
         #   Otherwise, choose an action with the highest Q-value for the current state
-
-        current_q = None
-        for k, v in self.Q[state].iteritems():
-            if current_q is None or v > current_q:
-                action = k
-                current_q = v
+        if not self.learning or self.epsilon > random.random():
+            action = self.valid_actions[random.randint(0, 3)]
+        elif self.epsilon < random.random():
+            current_q = None
+            for k, v in self.Q[state].iteritems():
+                if current_q is None or v > current_q:
+                    action = k
+                    current_q = v
         return action
 
 
@@ -143,12 +146,15 @@ class LearningAgent(Agent):
         # When learning, implement the value iteration update rule
         #   Use only the learning rate 'alpha' (do not use the discount factor 'gamma')
 
-        self.Q[state][action] += self.alpha * (reward + self.get_maxQ(state) - self.Q[state][action])
+        if self.learning:
+            # self.Q[state][action] += self.alpha * (reward + self.get_maxQ(state) - self.Q[state][action])
+            self.Q[state][action] += self.alpha * (reward - self.Q[state][action])
 
         return
 
     def update_decay_function(self):
-        self.epsilon = float(self.alpha) ** float(self.steps)
+        # self.epsilon = float(self.alpha) ** float(self.steps)
+        self.epsilon = 1 - (self.steps * 0.05)
 
     def update(self):
         """ The update function is called when a time step is completed in the 
@@ -199,14 +205,14 @@ def run():
     #   display      - set to False to disable the GUI if PyGame is enabled
     #   log_metrics  - set to True to log trial and simulation results to /logs
     #   optimized    - set to True to change the default log file name
-    sim = Simulator(env, update_delay=0.01, log_metrics=True, display=False, optimized=True)
+    sim = Simulator(env, update_delay=0.01, log_metrics=True, display=False, optimized=False)
 
     ##############
     # Run the simulator
     # Flags:
     #   tolerance  - epsilon tolerance before beginning testing, default is 0.05
     #   n_test     - discrete number of testing trials to perform, default is 0
-    sim.run(n_test=10)
+    sim.run(n_test=100)
 
 
 if __name__ == '__main__':
