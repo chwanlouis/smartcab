@@ -8,7 +8,7 @@ class LearningAgent(Agent):
     """ An agent that learns to drive in the Smartcab world.
         This is the object you will be modifying. """ 
 
-    def __init__(self, env, learning=True, epsilon=1.0, alpha=0.5):
+    def __init__(self, env, learning=True, epsilon=1.0, alpha=0.25):
         super(LearningAgent, self).__init__(env)     # Set the agent in the evironment 
         self.planner = RoutePlanner(self.env, self)  # Create a route planner
         self.valid_actions = self.env.valid_actions  # The set of valid actions
@@ -55,13 +55,13 @@ class LearningAgent(Agent):
         # Collect data about the environment
         waypoint = self.planner.next_waypoint() # The next waypoint 
         inputs = self.env.sense(self)           # Visual input - intersection light and traffic
-        deadline = self.env.get_deadline(self)  # Remaining deadline
+        # deadline = self.env.get_deadline(self)  # Remaining deadline
 
-        ########### 
+        ###########
         ## TO DO ##
         ###########
         # Set 'state' as a tuple of relevant data for the agent        
-        state = (waypoint, inputs['light'], inputs['oncoming'],  inputs['left'], inputs['right'], deadline)
+        state = (waypoint, inputs['light'], inputs['oncoming'],  inputs['left'], inputs['right'])
         return state
 
 
@@ -127,11 +127,12 @@ class LearningAgent(Agent):
         if not self.learning or self.epsilon > random.random():
             action = self.valid_actions[random.randint(0, 3)]
         elif self.epsilon < random.random():
-            current_q = None
+            best_q = self.get_maxQ(state)
+            best_actions = list()
             for k, v in self.Q[state].iteritems():
-                if current_q is None or v > current_q:
-                    action = k
-                    current_q = v
+                if v == best_q:
+                    best_actions.append(k)
+            action = best_actions[random.randint(0, len(best_actions) - 1)]
         return action
 
 
@@ -154,7 +155,7 @@ class LearningAgent(Agent):
 
     def update_decay_function(self):
         # self.epsilon = float(self.alpha) ** float(self.steps)
-        self.epsilon = 1 - (self.steps * 0.05)
+        self.epsilon = math.exp(- 0.025 * self.steps * self.alpha)
 
     def update(self):
         """ The update function is called when a time step is completed in the 
@@ -205,14 +206,14 @@ def run():
     #   display      - set to False to disable the GUI if PyGame is enabled
     #   log_metrics  - set to True to log trial and simulation results to /logs
     #   optimized    - set to True to change the default log file name
-    sim = Simulator(env, update_delay=0.01, log_metrics=True, display=False, optimized=False)
+    sim = Simulator(env, update_delay=0.01, log_metrics=True, display=False, optimized=True)
 
     ##############
     # Run the simulator
     # Flags:
     #   tolerance  - epsilon tolerance before beginning testing, default is 0.05
     #   n_test     - discrete number of testing trials to perform, default is 0
-    sim.run(n_test=100)
+    sim.run(n_test=1000)
 
 
 if __name__ == '__main__':
