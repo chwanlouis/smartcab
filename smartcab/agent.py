@@ -41,6 +41,10 @@ class LearningAgent(Agent):
         # Update additional class parameters as needed
         # If 'testing' is True, set epsilon and alpha to 0
 
+        # self.epsilon = float(self.alpha) ** float(self.steps)
+        self.epsilon = math.exp(- 0.00125 * self.steps * self.alpha)
+        # self.epsilon -= 0.05
+
         if testing:
             self.epsilon = 0
             self.alpha = 0
@@ -149,10 +153,6 @@ class LearningAgent(Agent):
 
         return
 
-    def update_decay_function(self):
-        # self.epsilon = float(self.alpha) ** float(self.steps)
-        # self.epsilon = math.exp(- 0.025 * self.steps * self.alpha)
-        self.epsilon -= 0.05
 
     def update(self):
         """ The update function is called when a time step is completed in the 
@@ -165,7 +165,6 @@ class LearningAgent(Agent):
         reward = self.env.act(self, action) # Receive a reward
         self.learn(state, action, reward)   # Q-learn
         self.steps += 1
-        self.update_decay_function()        # update decay function
 
         return
         
@@ -203,14 +202,14 @@ def run():
     #   display      - set to False to disable the GUI if PyGame is enabled
     #   log_metrics  - set to True to log trial and simulation results to /logs
     #   optimized    - set to True to change the default log file name
-    sim = Simulator(env, update_delay=0.01, log_metrics=True, display=False, optimized=False)
+    sim = Simulator(env, update_delay=0.01, log_metrics=True, display=False, optimized=True)
 
     ##############
     # Run the simulator
     # Flags:
     #   tolerance  - epsilon tolerance before beginning testing, default is 0.05
     #   n_test     - discrete number of testing trials to perform, default is 0
-    sim.run(n_test=10)
+    sim.run(n_test=100)
 
 
 if __name__ == '__main__':
